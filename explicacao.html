@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Interrupções linha a linha</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -325,6 +330,8 @@
     font-family: "IBM Plex Sans", system-ui, sans-serif;
   }
 </style>
+</head>
+<body>
 
 <div class="wrap">
 
@@ -559,6 +566,10 @@ ultimo = agora;</div>
   ledcAttachPin(BUZ, CANAL_BUZ);
 
   attachInterrupt(digitalPinToInterrupt(BTN), isrBotao, FALLING);
+
+  Serial.println();
+  Serial.println(F(<span class="s">"=== Aula 08 - Interrupcoes, botao e LED RGB ==="</span>));
+  mostrarAjuda();
 }</pre>
     <div class="lines">
       <div class="line">
@@ -592,6 +603,11 @@ ledcAttachPin(BUZ, CANAL_BUZ);</div>
   isrBotao,
   FALLING);</div>
         <p class="exp">A linha que arma tudo, com três argumentos. <strong><code>digitalPinToInterrupt(BTN)</code></strong> traduz o número do GPIO para o número do canal de interrupção. <strong><code>isrBotao</code></strong> é o nome da função, sem parênteses — você está passando a função, não chamando. <strong><code>FALLING</code></strong> escolhe a borda: com pull-up, apertar é a descida. <code>RISING</code> dispararia ao soltar e <code>CHANGE</code> nos dois, contando o dobro.</p>
+      </div>
+      <div class="line">
+        <div class="src">Serial.println(F("=== Aula 08 ..."));
+mostrarAjuda();</div>
+        <p class="exp">Cabeçalho e lista de comandos, impressos uma vez no boot. É a primeira coisa que aparece no Serial Monitor — se ela não aparece, a simulação não está rodando (veja a nota no fim da página). <code>mostrarAjuda()</code> é a mesma função que responde a um comando desconhecido.</p>
       </div>
     </div>
   </section>
@@ -646,17 +662,26 @@ interrupts();</div>
   c.trim();
   c.toUpperCase();
 
-  <span class="k">if</span> (c == <span class="s">"RESET"</span>) {
+  <span class="k">if</span> (c.length() == <span class="n">0</span>) {
+    <span class="c">// linha vazia: ignora</span>
+  } <span class="k">else if</span> (c == <span class="s">"RESET"</span>) {
     noInterrupts(); contador = <span class="n">0</span>; ultimo = <span class="n">0</span>; interrupts();
     Serial.println(F(<span class="s">"contador zerado"</span>));
   } <span class="k">else if</span> (c == <span class="s">"BLINK"</span>) {
     modo = <span class="s">"BLINK"</span>;
     ultimoBlink = millis();
     blinkAceso  = <span class="k">false</span>;
+    Serial.println(F(<span class="s">"modo BLINK"</span>));
+  } <span class="k">else if</span> (c == <span class="s">"STATUS"</span>) {
+    noInterrupts(); <span class="k">unsigned long</span> total = contador; interrupts();
+    Serial.print(F(<span class="s">"Cliques: "</span>)); Serial.print(total);
+    Serial.print(F(<span class="s">" | modo: "</span>)); Serial.println(modo);
   } <span class="k">else if</span> (aplicarCor(c)) {
     modo = c;
+    Serial.println(<span class="s">"modo "</span> + c);
   } <span class="k">else</span> {
     Serial.println(<span class="s">"comando desconhecido: "</span> + c);
+    mostrarAjuda();
   }
 }</pre>
     <div class="lines">
@@ -677,12 +702,20 @@ interrupts();</div>
         <p class="exp">Faz <code>off</code>, <code>Off</code> e <code>OFF</code> valerem a mesma coisa.</p>
       </div>
       <div class="line">
+        <div class="src">if (c.length() == 0) {</div>
+        <p class="exp">Um Enter sem texto chega como linha vazia. Tratá-la primeiro evita responder "comando desconhecido" a cada Enter acidental.</p>
+      </div>
+      <div class="line">
         <div class="src">noInterrupts(); contador = 0; ...</div>
         <p class="exp">Mesma proteção da leitura, agora na escrita: zerar um valor de 32 bits não é uma operação única para o processador, e um clique no meio deixaria o contador num estado incoerente. <code>ultimo = 0</code> também é zerado para o próximo clique não cair na janela de debounce antiga.</p>
       </div>
       <div class="line">
+        <div class="src">} else if (c == "STATUS") {</div>
+        <p class="exp">Só consulta: lê o contador com a mesma leitura atômica da parte 1 e imprime junto com o modo atual, sem mudar nada. Útil para conferir que a simulação está viva e que os cliques foram contados.</p>
+      </div>
+      <div class="line">
         <div class="src">} else if (aplicarCor(c)) {</div>
-        <p class="exp">A chamada faz duas coisas ao mesmo tempo: aplica a cor e responde se o comando existia. Quando devolve <code>false</code>, o <code>else</code> final avisa o usuário em vez de ignorar o que ele digitou.</p>
+        <p class="exp">A chamada faz duas coisas ao mesmo tempo: aplica a cor e responde se o comando existia. Quando devolve <code>false</code>, o <code>else</code> final avisa o usuário e reimprime a lista de comandos em vez de ignorar o que ele digitou.</p>
       </div>
       <div class="line">
         <div class="src">modo = c;</div>
@@ -728,7 +761,7 @@ interrupts();</div>
     <div class="section-head">
       <h2>Comandos no Serial Monitor</h2>
     </div>
-    <p>Digite e tecle Enter, com o monitor em 115200 bps.</p>
+    <p>Digite e tecle Enter, com o monitor em 115200 bps. No Wokwi do VS Code o Serial Monitor é o terminal <strong>Wokwi Terminal</strong>, no painel inferior (<kbd>Ctrl</kbd>+<kbd>`</kbd>). Cada comando responde com uma linha, por exemplo <code>modo R</code>.</p>
     <ul class="cmds">
       <li><kbd>R</kbd> vermelho</li>
       <li><kbd>G</kbd> verde</li>
@@ -743,7 +776,7 @@ interrupts();</div>
       <li><kbd>STATUS</kbd> contador e modo</li>
     </ul>
     <div class="note">
-      <strong>Se o monitor ficar mudo:</strong> no Wokwi do VS Code a simulação <strong>pausa quando a aba do simulador não está visível</strong> — e aí o Serial Monitor para de receber e de enviar. O sintoma é justamente esse: o painel abre, nada aparece e nada responde ao que você digita. Volte com <kbd>F1</kbd> → <em>Wokwi: Restart Simulation</em> (ou <em>Wokwi: Resume Simulation</em>) e mantenha a aba da simulação à vista. Digite os comandos no painel que fica <strong>dentro da própria aba da simulação</strong>: é o único monitor que não tira a aba de vista. Para um monitor externo, use o terminal do painel inferior (<em>View → Terminal</em>) com <code>pio device monitor -p rfc2217://localhost:4000 -b 115200</code>, a porta virtual definida no <code>wokwi.toml</code>. Evite abrir o monitor como aba de editor: ele esconde a aba da simulação e o simulador pausa de novo.
+      <strong>Se o monitor ficar mudo:</strong> no Wokwi do VS Code a simulação <strong>pausa quando a aba do simulador não está visível</strong> — e aí o Serial Monitor para de receber e de enviar. O sintoma é justamente esse: o painel abre, nada aparece e nada responde ao que você digita. Volte com <kbd>F1</kbd> → <em>Wokwi: Restart Simulation</em> (ou <em>Wokwi: Resume Simulation</em>) e mantenha a aba da simulação à vista. Digite os comandos no <strong>Wokwi Terminal</strong>, no painel inferior: por ficar embaixo, ele não esconde a aba da simulação. A mesma saída também sai pela porta virtual definida no <code>wokwi.toml</code>, que pode ser lida em outro terminal do painel inferior com <code>pio device monitor -p rfc2217://localhost:4000 -b 115200</code>. Evite abrir qualquer monitor ou arquivo como aba de editor por cima da simulação: isso a esconde e o simulador pausa de novo.
     </div>
   </section>
 
@@ -752,3 +785,6 @@ interrupts();</div>
   </footer>
 
 </div>
+
+</body>
+</html>
