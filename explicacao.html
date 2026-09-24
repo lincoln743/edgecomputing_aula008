@@ -1,0 +1,754 @@
+<title>Interrupções linha a linha</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,500;1,400&display=swap">
+
+<style>
+  :root{
+    color-scheme: light;
+    --bg:        #eef1f2;
+    --surface:   #ffffff;
+    --surface-2: #e4e9ea;
+    --ink:       #12201f;
+    --ink-soft:  #4a5d5c;
+    --ink-faint: #748584;
+    --rule:      #cfd8d8;
+    --accent:    #0c6b5e;
+    --accent-bg: #d8ebe6;
+    --signal:    #a35a06;
+    --signal-bg: #f4e5cf;
+    --code-bg:   #10201f;
+    --code-ink:  #d7e6e2;
+    --code-dim:  #7e9a95;
+    --code-key:  #7fd8c4;
+    --code-str:  #e8b86a;
+    --code-num:  #9fc7f0;
+
+    --maxw: 860px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --bg:        #0b1413;
+      --surface:   #131f1e;
+      --surface-2: #1b2928;
+      --ink:       #e3ecea;
+      --ink-soft:  #a8bcb9;
+      --ink-faint: #7b918e;
+      --rule:      #273836;
+      --accent:    #4fcfb8;
+      --accent-bg: #123430;
+      --signal:    #e0a458;
+      --signal-bg: #33260f;
+      --code-bg:   #07100f;
+      --code-ink:  #d7e6e2;
+      --code-dim:  #6e8683;
+      --code-key:  #7fd8c4;
+      --code-str:  #e8b86a;
+      --code-num:  #9fc7f0;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --bg:        #0b1413;
+    --surface:   #131f1e;
+    --surface-2: #1b2928;
+    --ink:       #e3ecea;
+    --ink-soft:  #a8bcb9;
+    --ink-faint: #7b918e;
+    --rule:      #273836;
+    --accent:    #4fcfb8;
+    --accent-bg: #123430;
+    --signal:    #e0a458;
+    --signal-bg: #33260f;
+    --code-bg:   #07100f;
+    --code-ink:  #d7e6e2;
+    --code-dim:  #6e8683;
+    --code-key:  #7fd8c4;
+    --code-str:  #e8b86a;
+    --code-num:  #9fc7f0;
+  }
+
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap{
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 40px 72px;
+  }
+
+  h1,h2,h3,.eyebrow,.pin-table th,.chip,.stepnum{
+    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  h1{
+    font-size: clamp(2rem, 6vw, 3rem);
+    line-height: 1.05;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 14px;
+    text-wrap: balance;
+  }
+  h2{
+    font-size: clamp(1.25rem, 3.4vw, 1.6rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+  h3{
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  .eyebrow{
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+  .lede{
+    font-size: 1.08rem;
+    color: var(--ink-soft);
+    margin: 0;
+    max-width: 62ch;
+  }
+
+  header.top{
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 28px;
+    margin-bottom: 36px;
+  }
+  .meta{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+  }
+  .chip{
+    font-size: .74rem;
+    font-weight: 500;
+    letter-spacing: .02em;
+    padding: 4px 10px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    color: var(--ink-soft);
+    background: var(--surface);
+  }
+
+  section{ margin-bottom: 44px; }
+  section > p{ max-width: 65ch; color: var(--ink-soft); }
+  .section-head{ margin-bottom: 18px; }
+
+  /* ---- fluxo da interrupcao: uma sequencia real, por isso numerada ---- */
+  .flow{
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .flow li{
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--accent);
+    border-radius: 3px;
+    padding: 14px;
+  }
+  .stepnum{
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .flow h3{ font-size: .95rem; }
+  .flow p{ margin: 0; font-size: .88rem; color: var(--ink-soft); line-height: 1.45; }
+  @media (max-width: 720px){
+    .flow{ grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 420px){
+    .flow{ grid-template-columns: 1fr; }
+  }
+
+  /* ---- tabela de pinos ---- */
+  .scroller{ overflow-x: auto; }
+  .pin-table{
+    width: 100%;
+    border-collapse: collapse;
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-size: .9rem;
+    min-width: 420px;
+  }
+  .pin-table th{
+    text-align: left;
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 0 12px 8px 0;
+    border-bottom: 1px solid var(--ink);
+  }
+  .pin-table td{
+    padding: 9px 12px 9px 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+    color: var(--ink-soft);
+  }
+  .pin-table td:first-child{ color: var(--ink); font-weight: 500; }
+  .pin-table code{ font-variant-numeric: tabular-nums; }
+
+  /* ---- codigo ---- */
+  code, kbd, pre{
+    font-family: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  p code, li code, td code, dd code{
+    background: var(--surface-2);
+    color: var(--ink);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: .86em;
+  }
+  pre.block{
+    background: var(--code-bg);
+    color: var(--code-ink);
+    padding: 16px 18px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: .82rem;
+    line-height: 1.7;
+    margin: 0 0 18px;
+    tab-size: 2;
+  }
+  pre.block .k{ color: var(--code-key); }
+  pre.block .s{ color: var(--code-str); }
+  pre.block .n{ color: var(--code-num); }
+  pre.block .c{ color: var(--code-dim); font-style: italic; }
+
+  /* ---- linha a linha ---- */
+  .lines{ margin: 0; }
+  .line{
+    display: grid;
+    grid-template-columns: minmax(0, 44%) minmax(0, 56%);
+    gap: 0 22px;
+    padding: 14px 0;
+    border-top: 1px solid var(--rule);
+    align-items: start;
+  }
+  .line:last-child{ border-bottom: 1px solid var(--rule); }
+  .line > .src{
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .8rem;
+    line-height: 1.55;
+    color: var(--ink);
+    background: var(--surface);
+    border-left: 2px solid var(--accent);
+    padding: 6px 10px;
+    border-radius: 0 3px 3px 0;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .line > .exp{
+    margin: 0;
+    font-size: .94rem;
+    color: var(--ink-soft);
+  }
+  .line > .exp strong{ color: var(--ink); font-weight: 600; }
+  @media (max-width: 680px){
+    .line{ grid-template-columns: 1fr; gap: 10px; }
+  }
+
+  /* ---- caixas ---- */
+  .note{
+    background: var(--accent-bg);
+    border-radius: 4px;
+    padding: 16px 18px;
+    margin: 18px 0 0;
+    font-size: .94rem;
+    color: var(--ink);
+  }
+  .note strong{ font-weight: 600; }
+  .warn{
+    background: var(--signal-bg);
+    border-left: 3px solid var(--signal);
+    border-radius: 0 4px 4px 0;
+    padding: 14px 18px;
+    margin: 0 0 14px;
+    font-size: .94rem;
+  }
+  .warn h3{ color: var(--signal); font-size: .92rem; margin-bottom: 2px; }
+  .warn p{ margin: 0; color: var(--ink-soft); }
+
+  .cmds{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 10px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .cmds li{
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 10px 12px;
+    font-size: .9rem;
+    color: var(--ink-soft);
+  }
+  .cmds kbd{
+    display: inline-block;
+    background: var(--code-bg);
+    color: var(--code-key);
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-size: .8rem;
+    font-weight: 500;
+    margin-right: 8px;
+  }
+
+  footer.end{
+    border-top: 1px solid var(--rule);
+    padding-top: 20px;
+    font-size: .86rem;
+    color: var(--ink-faint);
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="top">
+    <p class="eyebrow">Edge Computing · Aula 08</p>
+    <h1>Interrupções linha a linha</h1>
+    <p class="lede">O sketch do ESP32 que conta cliques por interrupção de hardware, trata o repique do botão e comanda um LED RGB pela porta serial — explicado instrução por instrução.</p>
+    <div class="meta">
+      <span class="chip">ESP32 DevKit</span>
+      <span class="chip">Push button · GPIO 15</span>
+      <span class="chip">LED RGB · 25 / 26 / 27</span>
+      <span class="chip">Buzzer · GPIO 23</span>
+      <span class="chip">115200 bps</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="section-head">
+      <h2>O que acontece quando você aperta o botão</h2>
+    </div>
+    <p>Sem interrupção, o programa precisa perguntar o tempo todo se o botão mudou — e pode perder um clique curto entre duas perguntas. Com interrupção, o próprio hardware avisa. Esta é a sequência, nesta ordem:</p>
+    <ol class="flow">
+      <li>
+        <span class="stepnum">Etapa 1</span>
+        <h3>Borda</h3>
+        <p>O pino vai de 3,3 V para 0 V no instante do clique. É a borda de descida (<code>FALLING</code>).</p>
+      </li>
+      <li>
+        <span class="stepnum">Etapa 2</span>
+        <h3>Desvio</h3>
+        <p>A CPU pausa o <code>loop()</code> exatamente onde estava e guarda o ponto de retorno.</p>
+      </li>
+      <li>
+        <span class="stepnum">Etapa 3</span>
+        <h3>ISR</h3>
+        <p>Executa <code>isrBotao()</code>: debounce, incrementa o contador, levanta a flag. Microssegundos.</p>
+      </li>
+      <li>
+        <span class="stepnum">Etapa 4</span>
+        <h3>Retorno</h3>
+        <p>Volta para o <code>loop()</code> na instrução seguinte. O loop vê a flag e faz o trabalho pesado.</p>
+      </li>
+    </ol>
+    <div class="note">
+      <strong>A regra que organiza tudo:</strong> a ISR registra o evento, o <code>loop()</code> reage a ele. Imprimir na serial dentro de uma ISR é o erro clássico — <code>Serial.print()</code> é lento e depende de interrupções que estão desabilitadas enquanto a ISR roda.
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Ligações</h2>
+    </div>
+    <div class="scroller">
+      <table class="pin-table">
+        <thead>
+          <tr><th>Componente</th><th>Pino do ESP32</th><th>Observação</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Botão — um terminal</td><td><code>GPIO 15</code></td><td>Sem resistor externo: usamos o pull-up interno</td></tr>
+          <tr><td>Botão — outro terminal</td><td><code>GND</code></td><td>Apertar puxa o pino para 0 V</td></tr>
+          <tr><td>LED RGB — R</td><td><code>GPIO 25</code></td><td>Em série com 220 Ω</td></tr>
+          <tr><td>LED RGB — G</td><td><code>GPIO 26</code></td><td>Em série com 220 Ω</td></tr>
+          <tr><td>LED RGB — B</td><td><code>GPIO 27</code></td><td>Em série com 220 Ω</td></tr>
+          <tr><td>LED RGB — COM</td><td><code>GND</code></td><td>Cátodo comum: nível ALTO acende</td></tr>
+          <tr><td>Buzzer (+) / (−)</td><td><code>GPIO 23</code> / <code>GND</code></td><td>Opcional, bipa a cada clique</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>1 · Pinos e constantes</h2>
+    </div>
+    <pre class="block"><span class="c">// FIAP - Edge Computing - Aula 08</span>
+<span class="k">#include</span> &lt;Arduino.h&gt;
+
+<span class="k">const int</span> BTN = <span class="n">15</span>;
+<span class="k">const int</span> R   = <span class="n">25</span>;
+<span class="k">const int</span> G   = <span class="n">26</span>;
+<span class="k">const int</span> B   = <span class="n">27</span>;
+<span class="k">const int</span> BUZ = <span class="n">23</span>;
+<span class="k">const int</span> CANAL_BUZ = <span class="n">0</span>;</pre>
+    <div class="lines">
+      <div class="line">
+        <div class="src">#include &lt;Arduino.h&gt;</div>
+        <p class="exp">Traz as funções básicas (<code>pinMode</code>, <code>digitalWrite</code>, <code>millis</code>). No editor do Wokwi ela é implícita, mas deixar explícito faz o mesmo arquivo compilar também no PlatformIO.</p>
+      </div>
+      <div class="line">
+        <div class="src">const int BTN = 15;</div>
+        <p class="exp">Número do GPIO do botão. <strong><code>const</code></strong> permite ao compilador substituir o valor direto na instrução — não gasta RAM e evita que uma linha distraída mude o pino no meio do programa.</p>
+      </div>
+      <div class="line">
+        <div class="src">const int R = 25;
+const int G = 26;
+const int B = 27;</div>
+        <p class="exp">Um GPIO por canal do LED RGB. Todo o resto do código fala em <code>R</code>, <code>G</code> e <code>B</code>: para mudar a montagem, você edita só estas três linhas.</p>
+      </div>
+      <div class="line">
+        <div class="src">const int BUZ = 23;</div>
+        <p class="exp">Buzzer. É opcional no circuito — se não ligar nada aqui, o <code>tone()</code> do loop simplesmente não produz som e o resto continua funcionando.</p>
+      </div>
+      <div class="line">
+        <div class="src">const int CANAL_BUZ = 0;</div>
+        <p class="exp">O buzzer não toca com <code>digitalWrite</code>: ele precisa de uma onda quadrada, e quem a gera no ESP32 é o periférico <strong>LEDC</strong> (o mesmo que faz PWM). O <code>tone()</code> usa o <strong>canal 0</strong> por padrão; esta constante dá nome a esse número para o <code>setup()</code> poder configurá-lo antes do primeiro tom.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>2 · As variáveis que a ISR compartilha com o loop</h2>
+    </div>
+    <pre class="block"><span class="k">volatile unsigned long</span> contador = <span class="n">0</span>;
+<span class="k">volatile unsigned long</span> ultimo   = <span class="n">0</span>;
+<span class="k">volatile bool</span>          clique   = <span class="k">false</span>;
+
+<span class="k">const unsigned long</span> DEBOUNCE_MS = <span class="n">200</span>;
+<span class="k">const unsigned long</span> BLINK_MS    = <span class="n">250</span>;</pre>
+    <div class="lines">
+      <div class="line">
+        <div class="src">volatile unsigned long contador = 0;</div>
+        <p class="exp"><strong><code>volatile</code></strong> é a palavra que faz este programa funcionar. Ela avisa o compilador: esta variável muda fora do fluxo normal. Sem ela, o otimizador lê <code>contador</code> uma vez, guarda numa posição de registrador e reusa o valor velho — o contador parece travado em zero mesmo com a ISR incrementando.</p>
+      </div>
+      <div class="line">
+        <div class="src">volatile unsigned long ultimo = 0;</div>
+        <p class="exp">Guarda o instante (em milissegundos desde o boot) do último clique aceito. É a memória do debounce.</p>
+      </div>
+      <div class="line">
+        <div class="src">volatile bool clique = false;</div>
+        <p class="exp">A flag. A ISR só levanta a bandeira; quem olha para ela e age é o <code>loop()</code>. Esse é o contrato que mantém a ISR curta.</p>
+      </div>
+      <div class="line">
+        <div class="src">const unsigned long DEBOUNCE_MS = 200;</div>
+        <p class="exp">Janela morta após um clique válido. O contato metálico do botão abre e fecha várias vezes em poucos milissegundos ao ser pressionado — sem essa janela, um clique vira cinco.</p>
+      </div>
+      <div class="line">
+        <div class="src">const unsigned long BLINK_MS = 250;</div>
+        <p class="exp">Meio período do modo BLINK: 250 ms aceso, 250 ms apagado, ou seja, duas piscadas por segundo.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>3 · A ISR</h2>
+    </div>
+    <pre class="block"><span class="k">void</span> IRAM_ATTR isrBotao() {
+  <span class="k">unsigned long</span> agora = millis();
+  <span class="k">if</span> (agora - ultimo &gt; DEBOUNCE_MS) {
+    contador++;
+    clique = <span class="k">true</span>;
+    ultimo = agora;
+  }
+}</pre>
+    <div class="lines">
+      <div class="line">
+        <div class="src">void IRAM_ATTR isrBotao() {</div>
+        <p class="exp"><strong><code>IRAM_ATTR</code></strong> manda o compilador colocar esta função na RAM interna do ESP32, em vez da memória flash. O motivo é concreto: quando a flash está ocupada (uma escrita, uma leitura de arquivo), uma função que morasse lá não poderia ser chamada, e a interrupção travaria o chip.</p>
+      </div>
+      <div class="line">
+        <div class="src">unsigned long agora = millis();</div>
+        <p class="exp">Carimbo de tempo do evento. Uma variável local não precisa de <code>volatile</code> — ela existe só durante esta chamada.</p>
+      </div>
+      <div class="line">
+        <div class="src">if (agora - ultimo &gt; DEBOUNCE_MS) {</div>
+        <p class="exp">O debounce inteiro está aqui: só aceita o clique se passaram mais de 200 ms desde o anterior. A subtração entre <code>unsigned long</code> continua correta mesmo quando <code>millis()</code> estoura e volta a zero, depois de 49 dias ligado.</p>
+      </div>
+      <div class="line">
+        <div class="src">contador++;
+clique = true;
+ultimo = agora;</div>
+        <p class="exp">As três únicas ações da ISR: conta, sinaliza, anota a hora. Nada de <code>Serial</code>, nada de <code>delay()</code>, nada de <code>tone()</code>. Toda a rotina termina em microssegundos.</p>
+      </div>
+    </div>
+    <div class="note">
+      <strong>Por que a ordem importa:</strong> <code>ultimo = agora</code> vem depois de contar. Se você atualizasse <code>ultimo</code> antes do <code>if</code>, cada repique reiniciaria a janela e o clique nunca seria aceito.
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>4 · Acender as cores</h2>
+    </div>
+    <pre class="block"><span class="k">void</span> setRGB(<span class="k">bool</span> r, <span class="k">bool</span> g, <span class="k">bool</span> b) {
+  digitalWrite(R, r);
+  digitalWrite(G, g);
+  digitalWrite(B, b);
+}
+
+<span class="k">bool</span> aplicarCor(<span class="k">const</span> String&amp; c) {
+  <span class="k">if</span>      (c == <span class="s">"R"</span>)   setRGB(<span class="n">1</span>, <span class="n">0</span>, <span class="n">0</span>);
+  <span class="k">else if</span> (c == <span class="s">"Y"</span>)   setRGB(<span class="n">1</span>, <span class="n">1</span>, <span class="n">0</span>);
+  <span class="c">// ... G, B, M, C, W, OFF</span>
+  <span class="k">else return false</span>;
+  <span class="k">return true</span>;
+}</pre>
+    <div class="lines">
+      <div class="line">
+        <div class="src">digitalWrite(R, r);</div>
+        <p class="exp">Sem <code>!</code> na frente. O LED do circuito é de <strong>cátodo comum</strong>: o terminal comum vai ao GND, então nível ALTO acende o canal. Num LED de ânodo comum (comum no 3V3) a lógica inverte e a linha vira <code>digitalWrite(R, !r)</code>.</p>
+      </div>
+      <div class="line">
+        <div class="src">setRGB(1, 1, 0);</div>
+        <p class="exp">As cores secundárias saem de acender dois canais juntos: vermelho + verde = amarelo, vermelho + azul = magenta, verde + azul = ciano, os três = branco.</p>
+      </div>
+      <div class="line">
+        <div class="src">bool aplicarCor(const String&amp; c)</div>
+        <p class="exp">Devolve <code>true</code> quando reconheceu o comando. É isso que permite ao <code>loop()</code> distinguir "cor aplicada" de "comando desconhecido" sem repetir a lista de cores em dois lugares. O <code>const String&amp;</code> passa a string por referência, sem copiá-la.</p>
+      </div>
+    </div>
+    <div class="warn">
+      <h3>Divergência na apostila</h3>
+      <p>O material lista o LED como cátodo comum no circuito, mas o trecho de código usa <code>digitalWrite(R, !r)</code> com o comentário "ânodo comum". As duas coisas juntas fazem o LED acender invertido — cor apagada quando deveria acender. Este código usa cátodo comum, de ponta a ponta.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>5 · setup()</h2>
+    </div>
+    <pre class="block"><span class="k">void</span> setup() {
+  Serial.begin(<span class="n">115200</span>);
+  delay(<span class="n">1000</span>);
+
+  pinMode(BTN, INPUT_PULLUP);
+  pinMode(R, OUTPUT); pinMode(G, OUTPUT); pinMode(B, OUTPUT);
+  pinMode(BUZ, OUTPUT);
+  setRGB(<span class="n">0</span>, <span class="n">0</span>, <span class="n">0</span>);
+
+  ledcSetup(CANAL_BUZ, <span class="n">2000</span>, <span class="n">10</span>);
+  ledcAttachPin(BUZ, CANAL_BUZ);
+
+  attachInterrupt(digitalPinToInterrupt(BTN), isrBotao, FALLING);
+}</pre>
+    <div class="lines">
+      <div class="line">
+        <div class="src">Serial.begin(115200);</div>
+        <p class="exp">Abre a porta serial nessa velocidade. O Serial Monitor precisa estar no mesmo valor — em outra velocidade você vê caracteres embaralhados, não linhas vazias.</p>
+      </div>
+      <div class="line">
+        <div class="src">delay(1000);</div>
+        <p class="exp">Um segundo de espera antes da primeira impressão. O Serial Monitor do Wokwi leva um instante para se conectar e, sem isso, o cabeçalho do programa se perde.</p>
+      </div>
+      <div class="line">
+        <div class="src">pinMode(BTN, INPUT_PULLUP);</div>
+        <p class="exp">Liga o resistor de pull-up que existe dentro do próprio ESP32. Em repouso o pino fica preso em HIGH; apertar o botão o conecta ao GND e ele cai para LOW. Sem o pull-up o pino ficaria flutuando e dispararia interrupções sozinho, por ruído.</p>
+      </div>
+      <div class="line">
+        <div class="src">pinMode(R, OUTPUT); ...</div>
+        <p class="exp">Os três canais do LED e o buzzer viram saídas. Um pino que ficou como entrada não acende nada, e o erro é silencioso.</p>
+      </div>
+      <div class="line">
+        <div class="src">setRGB(0, 0, 0);</div>
+        <p class="exp">Estado inicial definido. Logo após o boot o nível dos pinos é indefinido; esta linha garante que o programa começa com o LED apagado, coerente com <code>modo = "OFF"</code>.</p>
+      </div>
+      <div class="line">
+        <div class="src">ledcSetup(CANAL_BUZ, 2000, 10);
+ledcAttachPin(BUZ, CANAL_BUZ);</div>
+        <p class="exp">Cria o canal LEDC <strong>antes</strong> do primeiro <code>tone()</code>. Sem estas duas linhas, o primeiro bipe imprime <code>E ledc: ledc_get_duty(745): LEDC is not initialized</code> no Serial Monitor: no core Arduino-ESP32 2.0.x o <code>tone()</code> prende o pino ao canal antes de configurar o driver, e essa leitura de duty falha porque o periférico ainda não foi inicializado. O som sai igual — quem perde é a leitura do monitor serial. O <code>ledcSetup(0, 2000, 10)</code> configura o canal 0 com 2 kHz e 10 bits de resolução, e cada <code>tone()</code> reajusta a frequência do bipe.</p>
+      </div>
+      <div class="line">
+        <div class="src">attachInterrupt(
+  digitalPinToInterrupt(BTN),
+  isrBotao,
+  FALLING);</div>
+        <p class="exp">A linha que arma tudo, com três argumentos. <strong><code>digitalPinToInterrupt(BTN)</code></strong> traduz o número do GPIO para o número do canal de interrupção. <strong><code>isrBotao</code></strong> é o nome da função, sem parênteses — você está passando a função, não chamando. <strong><code>FALLING</code></strong> escolhe a borda: com pull-up, apertar é a descida. <code>RISING</code> dispararia ao soltar e <code>CHANGE</code> nos dois, contando o dobro.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>6 · loop(), parte 1 — o clique</h2>
+    </div>
+    <pre class="block"><span class="k">if</span> (clique) {
+  clique = <span class="k">false</span>;
+
+  noInterrupts();
+  <span class="k">unsigned long</span> total = contador;
+  interrupts();
+
+  Serial.print(F(<span class="s">"Cliques: "</span>));
+  Serial.println(total);
+  tone(BUZ, <span class="n">1500</span>, <span class="n">80</span>);
+}</pre>
+    <div class="lines">
+      <div class="line">
+        <div class="src">if (clique) {</div>
+        <p class="exp">O loop passa por aqui milhares de vezes por segundo e quase sempre encontra <code>false</code> — custa uma comparação. Só quando a ISR levantou a flag é que há trabalho.</p>
+      </div>
+      <div class="line">
+        <div class="src">clique = false;</div>
+        <p class="exp">Consome o evento logo na entrada. Se você zerasse a flag no fim do bloco, um clique chegando durante a impressão seria apagado junto e você perderia a contagem na tela.</p>
+      </div>
+      <div class="line">
+        <div class="src">noInterrupts();
+unsigned long total = contador;
+interrupts();</div>
+        <p class="exp">Leitura atômica. <code>contador</code> tem 32 bits e a ISR pode alterá-lo no meio da cópia, produzindo um valor que nunca existiu. Desligar as interrupções por três instruções resolve — e religá-las imediatamente é obrigatório, senão o botão para de funcionar.</p>
+      </div>
+      <div class="line">
+        <div class="src">Serial.print(F("Cliques: "));</div>
+        <p class="exp">O <code>F()</code> mantém o texto literal na flash em vez de copiá-lo para a RAM no boot. Num programa pequeno é detalhe; num projeto grande, é a diferença entre caber e não caber na memória.</p>
+      </div>
+      <div class="line">
+        <div class="src">tone(BUZ, 1500, 80);</div>
+        <p class="exp">1500 Hz por 80 ms. O terceiro argumento é a duração: o tom se desliga sozinho e o loop segue na mesma volta. Com <code>tone(BUZ, 1500)</code> sem duração, você precisaria de um <code>noTone()</code> depois.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>7 · loop(), parte 2 — os comandos</h2>
+    </div>
+    <pre class="block"><span class="k">if</span> (Serial.available()) {
+  String c = Serial.readStringUntil(<span class="s">'\n'</span>);
+  c.trim();
+  c.toUpperCase();
+
+  <span class="k">if</span> (c == <span class="s">"RESET"</span>) {
+    noInterrupts(); contador = <span class="n">0</span>; ultimo = <span class="n">0</span>; interrupts();
+    Serial.println(F(<span class="s">"contador zerado"</span>));
+  } <span class="k">else if</span> (c == <span class="s">"BLINK"</span>) {
+    modo = <span class="s">"BLINK"</span>;
+    ultimoBlink = millis();
+    blinkAceso  = <span class="k">false</span>;
+  } <span class="k">else if</span> (aplicarCor(c)) {
+    modo = c;
+  } <span class="k">else</span> {
+    Serial.println(<span class="s">"comando desconhecido: "</span> + c);
+  }
+}</pre>
+    <div class="lines">
+      <div class="line">
+        <div class="src">if (Serial.available()) {</div>
+        <p class="exp">Verdadeiro quando há pelo menos um byte esperando no buffer de recepção. Sem essa checagem, a leitura seguinte bloquearia o programa esperando alguém digitar.</p>
+      </div>
+      <div class="line">
+        <div class="src">String c = Serial.readStringUntil('\n');</div>
+        <p class="exp">Lê até o Enter. Por isso o comando só surte efeito quando você tecla Enter no Serial Monitor — digitar as letras não basta.</p>
+      </div>
+      <div class="line">
+        <div class="src">c.trim();</div>
+        <p class="exp">Remove espaços e, principalmente, o <code>\r</code> que vem antes do <code>\n</code> em alguns terminais. Sem isso a comparação <code>c == "R"</code> falha contra o texto <code>"R\r"</code> e nenhum comando funciona — é o bug mais comum deste exercício.</p>
+      </div>
+      <div class="line">
+        <div class="src">c.toUpperCase();</div>
+        <p class="exp">Faz <code>off</code>, <code>Off</code> e <code>OFF</code> valerem a mesma coisa.</p>
+      </div>
+      <div class="line">
+        <div class="src">noInterrupts(); contador = 0; ...</div>
+        <p class="exp">Mesma proteção da leitura, agora na escrita: zerar um valor de 32 bits não é uma operação única para o processador, e um clique no meio deixaria o contador num estado incoerente. <code>ultimo = 0</code> também é zerado para o próximo clique não cair na janela de debounce antiga.</p>
+      </div>
+      <div class="line">
+        <div class="src">} else if (aplicarCor(c)) {</div>
+        <p class="exp">A chamada faz duas coisas ao mesmo tempo: aplica a cor e responde se o comando existia. Quando devolve <code>false</code>, o <code>else</code> final avisa o usuário em vez de ignorar o que ele digitou.</p>
+      </div>
+      <div class="line">
+        <div class="src">modo = c;</div>
+        <p class="exp">Escolher uma cor tira o LED do modo BLINK, porque a condição do piscar testa <code>modo == "BLINK"</code>. Um único <code>if/else if</code> encadeado garante que só um ramo executa por comando.</p>
+      </div>
+    </div>
+    <div class="warn">
+      <h3>O que estava quebrado na versão da apostila</h3>
+      <p>Lá, depois do <code>else if (c == "BLINK") modo = "BLINK";</code>, vinha uma linha solta: <code>if (c != "BLINK") modo = c;</code>. Como ela roda fora da cadeia, qualquer texto digitado — inclusive um erro de digitação — virava o modo atual. Aqui a atribuição de <code>modo</code> acontece dentro de cada ramo.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>8 · loop(), parte 3 — piscar sem travar</h2>
+    </div>
+    <pre class="block"><span class="k">if</span> (modo == <span class="s">"BLINK"</span> &amp;&amp; millis() - ultimoBlink &gt;= BLINK_MS) {
+  ultimoBlink = millis();
+  blinkAceso  = !blinkAceso;
+  setRGB(blinkAceso, blinkAceso, blinkAceso);
+}</pre>
+    <div class="lines">
+      <div class="line">
+        <div class="src">millis() - ultimoBlink &gt;= BLINK_MS</div>
+        <p class="exp">Compara tempo decorrido em vez de parar o programa. É a diferença entre "já passaram 250 ms?" e "fique parado 250 ms" — a primeira pergunta deixa o loop livre para atender a serial e o botão.</p>
+      </div>
+      <div class="line">
+        <div class="src">blinkAceso = !blinkAceso;</div>
+        <p class="exp">Inverte a fase a cada vencimento. Duas trocas formam um ciclo completo de 500 ms.</p>
+      </div>
+      <div class="line">
+        <div class="src">setRGB(blinkAceso, blinkAceso, blinkAceso);</div>
+        <p class="exp">Os três canais recebem o mesmo valor: branco piscando. Trocar por <code>setRGB(blinkAceso, 0, 0)</code> faz um pisca-pisca vermelho.</p>
+      </div>
+    </div>
+    <div class="warn">
+      <h3>Por que não usar delay()</h3>
+      <p>A versão original fazia <code>setRGB(1,1,1); delay(250); setRGB(0,0,0); delay(250);</code>. Durante esses 500 ms o loop não lê a serial: os comandos parecem ignorados e só são atendidos na volta seguinte. O clique do botão continua sendo contado — é justamente esse o mérito da interrupção — mas a mensagem no Serial Monitor chega atrasada.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Comandos no Serial Monitor</h2>
+    </div>
+    <p>Digite e tecle Enter, com o monitor em 115200 bps.</p>
+    <ul class="cmds">
+      <li><kbd>R</kbd> vermelho</li>
+      <li><kbd>G</kbd> verde</li>
+      <li><kbd>B</kbd> azul</li>
+      <li><kbd>Y</kbd> amarelo (R+G)</li>
+      <li><kbd>M</kbd> magenta (R+B)</li>
+      <li><kbd>C</kbd> ciano (G+B)</li>
+      <li><kbd>W</kbd> branco</li>
+      <li><kbd>OFF</kbd> apaga</li>
+      <li><kbd>BLINK</kbd> pisca branco</li>
+      <li><kbd>RESET</kbd> zera o contador</li>
+      <li><kbd>STATUS</kbd> contador e modo</li>
+    </ul>
+    <div class="note">
+      <strong>Se o monitor ficar mudo:</strong> no Wokwi do VS Code a simulação <strong>pausa quando a aba do simulador não está visível</strong> — e aí o Serial Monitor para de receber e de enviar. O sintoma é justamente esse: o painel abre, nada aparece e nada responde ao que você digita. Volte com <kbd>F1</kbd> → <em>Wokwi: Restart Simulation</em> (ou <em>Wokwi: Resume Simulation</em>) e mantenha a aba da simulação à vista. Digite os comandos no painel que fica <strong>dentro da própria aba da simulação</strong>: é o único monitor que não tira a aba de vista. Para um monitor externo, use o terminal do painel inferior (<em>View → Terminal</em>) com <code>pio device monitor -p rfc2217://localhost:4000 -b 115200</code>, a porta virtual definida no <code>wokwi.toml</code>. Evite abrir o monitor como aba de editor: ele esconde a aba da simulação e o simulador pausa de novo.
+    </div>
+  </section>
+
+  <footer class="end">
+    Sketch e <code>diagram.json</code> acompanham esta página. Tutorial prático da Aula 8 — Interrupções e o botão push, Edge Computing, Prof. Flavio M. Azevedo.
+  </footer>
+
+</div>

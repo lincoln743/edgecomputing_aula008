@@ -1,0 +1,28 @@
+# ---------------------------------------------------------------------------
+#  FIAP - Edge Computing - Aula 08 - Interrupcoes e o botao push
+#  Configuracao do Wokwi para VS Code.
+#
+#  Este arquivo diz a extensao "Wokwi for VS Code" qual firmware deve ser
+#  carregado quando a simulacao de diagram.json e iniciada (comando
+#  "Wokwi: Start Simulator" ou Ctrl+Shift+P -> Wokwi: Start Simulator).
+#
+#  O firmware e o mesmo build do PlatformIO, entao antes de simular compile:
+#      pio run
+# ---------------------------------------------------------------------------
+[wokwi]
+version  = 1
+firmware = '.pio/build/esp32dev/firmware.bin'
+elf      = '.pio/build/esp32dev/firmware.elf'
+
+# Porta serial virtual (RFC2217). O Serial Monitor principal continua sendo o
+# painel que abre dentro da propria aba da simulacao; esta porta so serve para
+# ler a mesma saida em um terminal separado, com:
+#     pio device monitor -p rfc2217://localhost:4000 -b 115200
+#
+# ATENCAO: a simulacao pausa se a aba dela nao estiver visivel no VS Code - e o
+# Serial Monitor fica mudo (nao recebe nem envia). Se isso acontecer:
+#     F1 -> "Wokwi: Restart Simulation"  (ou "Wokwi: Resume Simulation")
+# e digite os comandos no painel de dentro da propria aba da simulacao. Se usar
+# um monitor externo, rode-o no terminal do painel inferior: um monitor que abre
+# como aba do editor esconde a aba da simulacao e pausa tudo de novo.
+rfc2217ServerPort = 4000
